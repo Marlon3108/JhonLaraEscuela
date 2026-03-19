@@ -3,196 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Profesores - Jhon Lara</title>
+    <title>Portal de Profesores - Jhon Lara</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Animaciones suaves */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Ocultar barra de scroll pero mantener funcionalidad */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans flex flex-col">
     
-    <!-- Encabezado -->
-    <header class="bg-indigo-700 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
-        <h1 class="font-bold text-lg">🎵 Profesores Jhon Lara</h1>
-        <span class="text-xs bg-indigo-800 px-2 py-1 rounded-full">v2.0</span>
+    <!-- HEADER -->
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 shadow-md sticky top-0 z-10">
+        <div class="flex justify-between items-center max-w-md mx-auto">
+            <h1 class="font-bold text-lg flex items-center gap-2"><span>🎵</span> Escuela Jhon Lara</h1>
+            <button onclick="cerrarSesion()" id="btnSalir" class="text-xs bg-white bg-opacity-20 px-3 py-1 rounded-full hidden hover:bg-opacity-30 transition">Salir</button>
+        </div>
     </header>
 
-    <!-- Contenido Principal -->
-    <main class="p-4 max-w-md mx-auto mt-4 space-y-4">
+    <main class="flex-1 p-4 max-w-md mx-auto w-full w-full">
         
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <h2 class="font-bold text-xl mb-1">Reporte Rápido</h2>
-            <p class="text-sm text-gray-500 mb-5">Llena este formulario si llegaste a la casa del alumno y no te abrió la puerta.</p>
-
-            <form id="formularioEvidencia" class="space-y-4">
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID de la Clase</label>
-                    <input type="text" id="idClase" required placeholder="Ej: CL001" 
-                           class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Motivo de Inasistencia</label>
-                    <textarea id="motivo" required placeholder="Ej: Toqué el timbre 3 veces, llamé al celular y nadie contestó..." 
-                              class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none h-24 resize-none"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Foto de Fachada (Evidencia)</label>
-                    
-                    <!-- Botón nativo de cámara -->
-                    <div class="border-2 border-dashed border-indigo-300 rounded-xl p-6 text-center bg-indigo-50 cursor-pointer relative hover:bg-indigo-100 transition" id="cajaFoto">
-                        <input type="file" id="inputFoto" accept="image/*" capture="environment" required 
-                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previsualizarFoto(event)">
-                        
-                        <div id="fotoPlaceholder">
-                            <span class="text-4xl block mb-2">📸</span>
-                            <p class="text-sm font-bold text-indigo-700">Toca para abrir cámara</p>
-                        </div>
-                        <img id="fotoPreview" class="hidden w-full h-40 object-cover rounded-lg shadow-sm mx-auto" />
-                    </div>
-                </div>
-
-                <button type="submit" id="btnEnviar" 
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg mt-4 transition-transform active:scale-95 flex justify-center items-center gap-2">
-                    <span>Subir Evidencia Segura</span>
-                </button>
-            </form>
+        <!-- PANTALLA 1: LOGIN DE PROFESOR -->
+        <div id="pantallaLogin" class="fade-in bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-4 text-center">
+            <div class="text-5xl mb-4">👋</div>
+            <h2 class="font-bold text-2xl mb-1 text-gray-800">¡Hola Profesor!</h2>
+            <p class="text-sm text-gray-500 mb-6">Selecciona tu perfil para ver tus clases de hoy.</p>
+            
+            <select id="selectProfesor" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none mb-4 text-gray-700 font-medium">
+                <option value="">Cargando profesores...</option>
+            </select>
+            
+            <button onclick="entrarAlSistema()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition-transform active:scale-95">
+                Ver Mis Clases
+            </button>
         </div>
-        
+
+        <!-- PANTALLA 2: MIS CLASES (LISTA) -->
+        <div id="pantallaClases" class="hidden fade-in space-y-4 pb-10">
+            <div class="flex justify-between items-end mb-2 mt-2">
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800">Clases de Hoy</h2>
+                    <p id="fechaHoy" class="text-sm text-gray-500"></p>
+                </div>
+                <button onclick="cargarClases()" class="text-blue-600 p-2 rounded-full hover:bg-blue-50">🔄</button>
+            </div>
+            
+            <div id="contenedorClases" class="space-y-3">
+                <!-- Las tarjetas de clases se inyectarán aquí -->
+            </div>
+        </div>
+
     </main>
 
-    <!-- Modal de Carga / Éxito -->
-    <div id="overlayEstado" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl">
-            <div id="estadoIcono" class="text-5xl mb-4 animate-spin">⏳</div>
-            <h3 id="estadoTitulo" class="font-bold text-lg mb-1">Procesando...</h3>
-            <p id="estadoMensaje" class="text-sm text-gray-600">Comprimiendo y subiendo foto a Google Drive.</p>
-            <button id="btnCerrarModal" onclick="cerrarModal()" class="hidden mt-6 w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-xl">Entendido</button>
+    <!-- MODAL PRINCIPAL DE ASISTENCIA -->
+    <div id="modalAsistencia" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 text-white flex justify-between items-center shrink-0">
+                <h2 class="text-lg font-bold">Reportar Asistencia</h2>
+                <button onclick="cerrarModal()" class="text-white text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1">
+                <h3 id="modalNombre" class="font-bold text-gray-800 text-xl mb-1"></h3>
+                <p id="modalDetalles" class="text-sm text-gray-500 mb-5"></p>
+                <input type="hidden" id="modalIdClase">
+
+                <!-- Opciones de Reporte -->
+                <div class="space-y-2 mb-5">
+                    <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 transition">
+                        <input type="radio" name="tipoReporte" value="completada" class="form-radio h-5 w-5 text-blue-600" checked onchange="cambiarVistaModal()">
+                        <span class="ml-3 text-gray-800 font-medium text-sm">✅ Dicté la clase (Cliente asistió)</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition">
+                        <input type="radio" name="tipoReporte" value="evidencia" class="form-radio h-5 w-5 text-orange-500" onchange="cambiarVistaModal()">
+                        <span class="ml-3 text-gray-800 font-medium text-sm">📸 Cliente no asistió (Evidencia)</span>
+                    </label>
+                </div>
+
+                <!-- RAMA 1: PIN -->
+                <div id="vistaCompletada" class="space-y-4 fade-in">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-xs text-blue-800 mb-3 font-medium">Pide al alumno su PIN de 4 dígitos.</p>
+                        <div class="flex gap-2">
+                            <input type="number" id="inputPIN" placeholder="0000" class="flex-1 p-3 bg-white border border-blue-200 rounded-xl text-center text-2xl tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-blue-400" maxlength="4">
+                            <button onclick="solicitarNuevoPIN()" class="bg-blue-600 text-white font-bold px-4 rounded-xl text-sm active:scale-95 transition">Crear PIN</button>
+                        </div>
+                        <p id="pinPrueba" class="text-xs text-indigo-600 font-bold mt-2 text-center hidden"></p>
+                    </div>
+                    <button onclick="enviarAsistenciaPIN()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-md transition active:scale-95">Confirmar Clase Dictada</button>
+                </div>
+
+                <!-- RAMA 2: EVIDENCIA (CÁMARA) -->
+                <div id="vistaEvidencia" class="space-y-4 fade-in hidden">
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                        <p class="text-xs text-orange-800 mb-3 font-medium">Toma una foto a la fachada de la casa.</p>
+                        
+                        <div class="border-2 border-dashed border-orange-300 rounded-xl p-4 text-center bg-white cursor-pointer relative overflow-hidden h-32 flex items-center justify-center">
+                            <input type="file" id="inputFoto" accept="image/*" capture="environment" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previsualizarFoto(event)">
+                            <div id="fotoPlaceholder">
+                                <span class="text-3xl block mb-1">📷</span><span class="text-xs font-bold text-orange-600">Tocar cámara</span>
+                            </div>
+                            <img id="fotoPreview" class="hidden absolute inset-0 w-full h-full object-cover" />
+                        </div>
+                        
+                        <textarea id="motivoEvidencia" placeholder="Motivo (Ej: Toqué 3 veces)..." class="w-full mt-3 p-3 text-sm bg-white border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 h-20 resize-none"></textarea>
+                    </div>
+                    <button onclick="enviarEvidenciaFoto()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-md transition active:scale-95">Subir Foto y Notificar</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA -->
-    <script>
-        // PEGA AQUÍ TU URL DE EXEC GENERADA EN EL PASO ANTERIOR
-        const API_URL = "https://script.google.com/macros/s/AKfycbxjPywvCdRXLNVxbikJYgHNs_6e1c_yroYwbHyP5Jucc-22DdBnEdJDsLXCqDW3zFuv/exec";
+    <!-- SPINNER GLOBAL -->
+    <div id="spinner" class="fixed inset-0 bg-white bg-opacity-90 hidden flex-col items-center justify-center z-[100] backdrop-blur-sm">
+        <div class="animate-spin text-5xl mb-4">🔄</div>
+        <p id="spinnerText" class="font-bold text-gray-800 animate-pulse">Cargando...</p>
+    </div>
 
+    <script>
+        // ¡ACTUALIZA ESTA URL SI CAMBIÓ, DE LO CONTRARIO DEJA LA QUE YA TIENES!
+        const API_URL = "https://script.google.com/macros/s/AKfycbxjPywvCdRXLNVxbikJYgHNs_6e1c_yroYwbHyP5Jucc-22DdBnEdJDsLXCqDW3zFuv/exec";
+        
+        let idProfesorActual = "";
+
+        // Inicialización
+        window.onload = () => {
+            const fecha = new Date();
+            document.getElementById('fechaHoy').innerText = fecha.toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            cargarProfesores();
+        };
+
+        // Utilidades UI
+        function mostrarSpinner(texto = "Cargando...") {
+            document.getElementById('spinnerText').innerText = texto;
+            document.getElementById('spinner').classList.remove('hidden');
+            document.getElementById('spinner').classList.add('flex');
+        }
+        function ocultarSpinner() {
+            document.getElementById('spinner').classList.add('hidden');
+            document.getElementById('spinner').classList.remove('flex');
+        }
+
+        // --- PETICIONES A LA API ---
+        async function fetchAPI(payload) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (error) {
+                alert("Error de conexión. Revisa tu internet.");
+                return { success: false, error: error.message };
+            }
+        }
+
+        // --- FLUJO LOGIN Y CLASES ---
+        async function cargarProfesores() {
+            const select = document.getElementById('selectProfesor');
+            const data = await fetchAPI({ accion: "obtener_profesores" });
+            
+            if (data.success && data.datos) {
+                select.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+                data.datos.forEach(prof => {
+                    select.innerHTML += `<option value="${prof[0]}">${prof[1]}</option>`;
+                });
+            } else {
+                select.innerHTML = '<option value="">Error al cargar</option>';
+            }
+        }
+
+        function entrarAlSistema() {
+            const select = document.getElementById('selectProfesor');
+            if (!select.value) return alert("Por favor selecciona tu nombre.");
+            
+            idProfesorActual = select.value;
+            document.getElementById('pantallaLogin').classList.add('hidden');
+            document.getElementById('btnSalir').classList.remove('hidden');
+            document.getElementById('pantallaClases').classList.remove('hidden');
+            
+            cargarClases();
+        }
+
+        function cerrarSesion() {
+            idProfesorActual = "";
+            document.getElementById('pantallaClases').classList.add('hidden');
+            document.getElementById('btnSalir').classList.add('hidden');
+            document.getElementById('pantallaLogin').classList.remove('hidden');
+            document.getElementById('selectProfesor').value = "";
+        }
+
+        async function cargarClases() {
+            mostrarSpinner("Buscando clases...");
+            const contenedor = document.getElementById('contenedorClases');
+            const hoyStr = new Date().toISOString().split('T')[0];
+            
+            const data = await fetchAPI({ accion: "obtener_clases", idProfesor: idProfesorActual, fechaStr: hoyStr });
+            
+            ocultarSpinner();
+            
+            if (data.success) {
+                if (data.datos.length === 0) {
+                    contenedor.innerHTML = `
+                        <div class="text-center p-8 bg-white rounded-xl border border-dashed border-gray-300 text-gray-500">
+                            <span class="text-4xl block mb-2">🎉</span>
+                            No tienes clases pendientes para hoy.
+                        </div>`;
+                } else {
+                    contenedor.innerHTML = "";
+                    data.datos.forEach(clase => {
+                        contenedor.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-gray-800">${clase[5]}</h3>
+                                <p class="text-xs text-gray-500 font-medium">${clase[6]} • ${clase[2]}</p>
+                            </div>
+                            <button onclick="abrirModal('${clase[0]}', '${clase[5]}', '${clase[6]} a las ${clase[2]}')" 
+                                    class="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg text-sm active:bg-blue-200">
+                                Reportar
+                            </button>
+                        </div>`;
+                    });
+                }
+            } else {
+                contenedor.innerHTML = `<p class="text-red-500 text-center p-4">Error cargando clases.</p>`;
+            }
+        }
+
+        // --- FLUJO MODAL ---
+        function abrirModal(id, nombre, detalles) {
+            document.getElementById('modalIdClase').value = id;
+            document.getElementById('modalNombre').innerText = nombre;
+            document.getElementById('modalDetalles').innerText = detalles;
+            
+            // Limpiar
+            document.getElementById('inputPIN').value = "";
+            document.getElementById('pinPrueba').classList.add('hidden');
+            document.getElementById('inputFoto').value = "";
+            document.getElementById('motivoEvidencia').value = "";
+            document.getElementById('fotoPreview').classList.add('hidden');
+            document.getElementById('fotoPlaceholder').classList.remove('hidden');
+            
+            document.querySelector('input[value="completada"]').checked = true;
+            cambiarVistaModal();
+            
+            const modal = document.getElementById('modalAsistencia');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalAsistencia').classList.add('hidden');
+            document.getElementById('modalAsistencia').classList.remove('flex');
+        }
+
+        function cambiarVistaModal() {
+            const val = document.querySelector('input[name="tipoReporte"]:checked').value;
+            if (val === 'completada') {
+                document.getElementById('vistaCompletada').classList.remove('hidden');
+                document.getElementById('vistaEvidencia').classList.add('hidden');
+            } else {
+                document.getElementById('vistaCompletada').classList.add('hidden');
+                document.getElementById('vistaEvidencia').classList.remove('hidden');
+            }
+        }
+
+        // --- ACCIONES ASISTENCIA ---
+        async function solicitarNuevoPIN() {
+            const id = document.getElementById('modalIdClase').value;
+            mostrarSpinner("Generando PIN...");
+            const data = await fetchAPI({ accion: "generar_pin", idClase: id });
+            ocultarSpinner();
+            
+            if (data.success) {
+                const p = document.getElementById('pinPrueba');
+                p.innerText = "PIN Generado: " + data.pin;
+                p.classList.remove('hidden');
+            }
+        }
+
+        async function enviarAsistenciaPIN() {
+            const id = document.getElementById('modalIdClase').value;
+            const pin = document.getElementById('inputPIN').value;
+            if (pin.length !== 4) return alert("Ingresa los 4 dígitos del PIN");
+
+            mostrarSpinner("Validando...");
+            const data = await fetchAPI({ accion: "confirmar_clase", idClase: id, pinIngresado: pin });
+            ocultarSpinner();
+
+            if (data.success) {
+                alert("¡Clase completada exitosamente!");
+                cerrarModal();
+                cargarClases();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        // --- ACCIONES FOTO ---
         function previsualizarFoto(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = e => {
                 document.getElementById('fotoPlaceholder').classList.add('hidden');
                 const img = document.getElementById('fotoPreview');
                 img.src = e.target.result;
                 img.classList.remove('hidden');
-            }
+            };
             reader.readAsDataURL(file);
         }
 
-        // Compresión rápida nativa (Canvas)
         async function comprimirImagen(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = e => {
                     const img = new Image();
-                    img.onload = function() {
+                    img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        
-                        let width = img.width;
-                        let height = img.height;
-                        const MAX_WIDTH = 800;
-                        const MAX_HEIGHT = 600;
-                        
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    }
+                        let w = img.width, h = img.height;
+                        if (w > h) { if (w > 800) { h *= 800 / w; w = 800; } } 
+                        else { if (h > 600) { w *= 600 / h; h = 600; } }
+                        canvas.width = w; canvas.height = h;
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+                    };
                     img.src = e.target.result;
-                }
+                };
                 reader.readAsDataURL(file);
             });
         }
 
-        function mostrarModalEdo(icono, titulo, mensaje, mostrarBoton, animar) {
-            const overlay = document.getElementById('overlayEstado');
-            const iconEl = document.getElementById('estadoIcono');
-            
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            
-            iconEl.innerText = icono;
-            if(animar) iconEl.classList.add('animate-spin');
-            else iconEl.classList.remove('animate-spin');
-            
-            document.getElementById('estadoTitulo').innerText = titulo;
-            document.getElementById('estadoMensaje').innerText = mensaje;
-            
-            const btn = document.getElementById('btnCerrarModal');
-            if(mostrarBoton) btn.classList.remove('hidden');
-            else btn.classList.add('hidden');
-        }
-
-        function cerrarModal() {
-            document.getElementById('overlayEstado').classList.add('hidden');
-            document.getElementById('overlayEstado').classList.remove('flex');
-        }
-
-        document.getElementById('formularioEvidencia').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const idClase = document.getElementById('idClase').value.trim();
-            const motivo = document.getElementById('motivo').value.trim();
+        async function enviarEvidenciaFoto() {
+            const id = document.getElementById('modalIdClase').value;
+            const motivo = document.getElementById('motivoEvidencia').value.trim();
             const inputFoto = document.getElementById('inputFoto');
             
-            if (!inputFoto.files[0]) return alert("Falta la foto");
+            if (!inputFoto.files[0]) return alert("Debes tomar la foto de la fachada.");
+            if (!motivo) return alert("Escribe el motivo de la inasistencia.");
 
-            mostrarModalEdo("⏳", "Procesando", "Comprimiendo imagen en tu celular...", false, true);
-
+            mostrarSpinner("Comprimiendo y subiendo foto a Drive...");
+            
             try {
-                // 1. Comprimir
-                const base64Foto = await comprimirImagen(inputFoto.files[0]);
-                const base64Puro = base64Foto.split(',')[1];
-
-                mostrarModalEdo("📡", "Subiendo a la nube", "Enviando datos al servidor seguro...", false, true);
-
-                // 2. Armar el paquete de datos
-                const payload = {
-                    accion: "subir_evidencia",
-                    idClase: idClase,
-                    motivo: motivo,
-                    fotoBase64: base64Puro
-                };
-
-                // 3. Enviar a Google Apps Script por POST
-                const respuesta = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, // text/plain evita errores de CORS en GAS
-                    body: JSON.stringify(payload)
+                const base64Puro = await comprimirImagen(inputFoto.files[0]);
+                const data = await fetchAPI({ 
+                    accion: "subir_evidencia", 
+                    idClase: id, 
+                    motivo: motivo, 
+                    fotoBase64: base64Puro 
                 });
-
-                const data = await respuesta.json();
-
+                
+                ocultarSpinner();
+                
                 if (data.success) {
-                    mostrarModalEdo("✅", "¡Éxito!", "Evidencia guardada en Drive y clase actualizada.", true, false);
-                    document.getElementById('formularioEvidencia').reset();
-                    document.getElementById('fotoPreview').classList.add('hidden');
-                    document.getElementById('fotoPlaceholder').classList.remove('hidden');
+                    alert("¡Evidencia guardada! El cliente será notificado.");
+                    cerrarModal();
+                    cargarClases();
                 } else {
-                    mostrarModalEdo("❌", "Error", data.error || "No se pudo guardar la evidencia. Revisa el ID de la clase.", true, false);
+                    alert(data.error || "Error al subir la foto.");
                 }
-
-            } catch (error) {
-                mostrarModalEdo("⚠️", "Error de Conexión", "Revisa tu internet o la URL del API.", true, false);
+            } catch (e) {
+                ocultarSpinner();
+                alert("Ocurrió un error al procesar la imagen.");
             }
-        });
+        }
     </script>
 </body>
 </html>
