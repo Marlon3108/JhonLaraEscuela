@@ -2,24 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Profesores - Jhon Lara</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; /* Evita doble scroll */
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal de Profesores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <!-- Pegas tu enlace de Google Apps Script aquí -->
-    <iframe src="https://script.google.com/macros/s/AKfycbwDdR8-yncB7E7zctXaXikXs1OBef8398Jn4FMCspu0XYiFvg44fJUakzHqX1M6__U/exec"></iframe>
+<body class="bg-gradient-to-r from-blue-600 to-indigo-700 min-h-screen flex flex-col items-center justify-center p-4">
+    
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
+        <div class="text-6xl mb-4">🎵</div>
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Escuela de Música Jhon Lara</h1>
+        <p class="text-gray-600 mb-8 text-sm">Portal administrativo y registro de asistencia para profesores.</p>
+        
+        <!-- Este enlace abre la app directamente en la misma pestaña pero saltándose el iframe -->
+        <a href="https://script.google.com/macros/s/AKfycbwDdR8-yncB7E7zctXaXikXs1OBef8398Jn4FMCspu0XYiFvg44fJUakzHqX1M6__U/exec" 
+           class="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
+           Entrar al Sistema
+        </a>
+        
+        <p class="mt-6 text-xs text-gray-400">Si presentas errores de acceso, abre esta página en modo incógnito.</p>
+    </div>
+
 </body>
 </html>
