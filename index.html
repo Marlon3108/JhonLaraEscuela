@@ -279,9 +279,12 @@
             ocultarSpinner();
             
             if (data.success) {
+                mostrarToast("Se ha enviado un nuevo PIN al alumno.", "exito");
+                // Asegurarnos de que el texto de prueba nunca se muestre en producción
                 const p = document.getElementById('pinPrueba');
-                p.innerText = "PIN Generado: " + data.pin;
-                p.classList.remove('hidden');
+                p.classList.add('hidden'); 
+            } else {
+                mostrarToast(data.error || "Error al generar PIN.", "error");
             }
         }
 
