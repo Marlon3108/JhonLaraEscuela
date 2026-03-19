@@ -88,7 +88,7 @@
                         <p class="text-xs text-blue-800 mb-3 font-medium">Pide al alumno su PIN de 4 dígitos.</p>
                         <div class="flex gap-2">
                             <input type="number" id="inputPIN" placeholder="0000" class="flex-1 p-3 bg-white border border-blue-200 rounded-xl text-center text-2xl tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-blue-400" maxlength="4">
-                            <button onclick="solicitarNuevoPIN()" class="bg-blue-600 text-white font-bold px-4 rounded-xl text-sm active:scale-95 transition">Crear PIN</button>
+                            <button onclick="solicitarNuevoPIN()" class="bg-blue-600 text-white font-bold px-3 py-2 shrink-0 rounded-xl text-xs sm:text-sm active:scale-95 transition whitespace-nowrap">Crear PIN</button>
                         </div>
                         <p id="pinPrueba" class="text-xs text-indigo-600 font-bold mt-2 text-center hidden"></p>
                     </div>
@@ -156,7 +156,7 @@
                 });
                 return await response.json();
             } catch (error) {
-                alert("Error de conexión. Revisa tu internet.");
+                mostrarToast("Error de conexión. Revisa tu internet.");
                 return { success: false, error: error.message };
             }
         }
@@ -178,7 +178,7 @@
 
         function entrarAlSistema() {
             const select = document.getElementById('selectProfesor');
-            if (!select.value) return alert("Por favor selecciona tu nombre.");
+            if (!select.value) return mostrarToast("Por favor selecciona tu nombre.");
             
             idProfesorActual = select.value;
             document.getElementById('pantallaLogin').classList.add('hidden');
@@ -288,18 +288,18 @@
         async function enviarAsistenciaPIN() {
             const id = document.getElementById('modalIdClase').value;
             const pin = document.getElementById('inputPIN').value;
-            if (pin.length !== 4) return alert("Ingresa los 4 dígitos del PIN");
+            if (pin.length !== 4) return mostrarToast("Ingresa los 4 dígitos del PIN");
 
             mostrarSpinner("Validando...");
             const data = await fetchAPI({ accion: "confirmar_clase", idClase: id, pinIngresado: pin });
             ocultarSpinner();
 
             if (data.success) {
-                alert("¡Clase completada exitosamente!");
+                mostrarToast("¡Clase completada exitosamente!");
                 cerrarModal();
                 cargarClases();
             } else {
-                alert(data.error);
+                mostrarToast(data.error);
             }
         }
 
@@ -343,8 +343,8 @@
             const motivo = document.getElementById('motivoEvidencia').value.trim();
             const inputFoto = document.getElementById('inputFoto');
             
-            if (!inputFoto.files[0]) return alert("Debes tomar la foto de la fachada.");
-            if (!motivo) return alert("Escribe el motivo de la inasistencia.");
+            if (!inputFoto.files[0]) return mostrarToast("Debes tomar la foto de la fachada.");
+            if (!motivo) return mostrarToast("Escribe el motivo de la inasistencia.");
 
             mostrarSpinner("Comprimiendo y subiendo foto a Drive...");
             
@@ -360,17 +360,39 @@
                 ocultarSpinner();
                 
                 if (data.success) {
-                    alert("¡Evidencia guardada! El cliente será notificado.");
+                    mostrarToast("¡Evidencia guardada! El cliente será notificado.");
                     cerrarModal();
                     cargarClases();
                 } else {
-                    alert(data.error || "Error al subir la foto.");
+                    mostrarToast(data.error || "Error al subir la foto.");
                 }
             } catch (e) {
                 ocultarSpinner();
-                alert("Ocurrió un error al procesar la imagen.");
+                mostrarToast("Ocurrió un error al procesar la imagen.");
             }
         }
+
+        function mostrarToast(mensaje, tipo = "exito") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMensaje').innerText = mensaje;
+            document.getElementById('toastIcono').innerText = tipo === "exito" ? "✅" : tipo === "error" ? "❌" : "⚠️";
+            
+            // Mostrar
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            // Ocultar después de 3.5 segundos
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
     </script>
+    <!-- NOTIFICACIÓN TIPO TOAST -->
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 translate-y-20 opacity-0 z-[200] flex items-center gap-2 whitespace-nowrap text-sm font-medium">
+        <span id="toastIcono">✅</span>
+        <span id="toastMensaje">Acción completada</span>
+    </div>
+
 </body>
 </html>
