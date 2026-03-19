@@ -3,26 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portal de Profesores</title>
+    <title>App Profesores - Jhon Lara</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-blue-600 to-indigo-700 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
     
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
-        <div class="text-6xl mb-4">🎵</div>
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">Escuela de Música Jhon Lara</h1>
-        <p class="text-gray-600 mb-8 text-sm">Portal administrativo y registro de asistencia para profesores.</p>
+    <!-- Encabezado -->
+    <header class="bg-indigo-700 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
+        <h1 class="font-bold text-lg">🎵 Profesores Jhon Lara</h1>
+        <span class="text-xs bg-indigo-800 px-2 py-1 rounded-full">v2.0</span>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="p-4 max-w-md mx-auto mt-4 space-y-4">
         
-        <!-- Este enlace abre una nueva pestaña limpia y previene la fuga de cookies cruzadas -->
-        <a href="https://script.google.com/macros/s/AKfycbwDdR8-yncB7E7zctXaXikXs1OBef8398Jn4FMCspu0XYiFvg44fJUakzHqX1M6__U/exec" 
-           target="_blank" 
-           rel="noopener noreferrer"
-           class="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
-           Entrar al Sistema
-        </a>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <h2 class="font-bold text-xl mb-1">Reporte Rápido</h2>
+            <p class="text-sm text-gray-500 mb-5">Llena este formulario si llegaste a la casa del alumno y no te abrió la puerta.</p>
+
+            <form id="formularioEvidencia" class="space-y-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID de la Clase</label>
+                    <input type="text" id="idClase" required placeholder="Ej: CL001" 
+                           class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Motivo de Inasistencia</label>
+                    <textarea id="motivo" required placeholder="Ej: Toqué el timbre 3 veces, llamé al celular y nadie contestó..." 
+                              class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none h-24 resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Foto de Fachada (Evidencia)</label>
+                    
+                    <!-- Botón nativo de cámara -->
+                    <div class="border-2 border-dashed border-indigo-300 rounded-xl p-6 text-center bg-indigo-50 cursor-pointer relative hover:bg-indigo-100 transition" id="cajaFoto">
+                        <input type="file" id="inputFoto" accept="image/*" capture="environment" required 
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previsualizarFoto(event)">
+                        
+                        <div id="fotoPlaceholder">
+                            <span class="text-4xl block mb-2">📸</span>
+                            <p class="text-sm font-bold text-indigo-700">Toca para abrir cámara</p>
+                        </div>
+                        <img id="fotoPreview" class="hidden w-full h-40 object-cover rounded-lg shadow-sm mx-auto" />
+                    </div>
+                </div>
+
+                <button type="submit" id="btnEnviar" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg mt-4 transition-transform active:scale-95 flex justify-center items-center gap-2">
+                    <span>Subir Evidencia Segura</span>
+                </button>
+            </form>
+        </div>
         
-        <p class="mt-6 text-xs text-gray-400">Si presentas errores de acceso, abre esta página en modo incógnito.</p>
+    </main>
+
+    <!-- Modal de Carga / Éxito -->
+    <div id="overlayEstado" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl">
+            <div id="estadoIcono" class="text-5xl mb-4 animate-spin">⏳</div>
+            <h3 id="estadoTitulo" class="font-bold text-lg mb-1">Procesando...</h3>
+            <p id="estadoMensaje" class="text-sm text-gray-600">Comprimiendo y subiendo foto a Google Drive.</p>
+            <button id="btnCerrarModal" onclick="cerrarModal()" class="hidden mt-6 w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-xl">Entendido</button>
+        </div>
     </div>
 
+    <!-- SCRIPT DE LÓGICA -->
+    <script>
+        // PEGA AQUÍ TU URL DE EXEC GENERADA EN EL PASO ANTERIOR
+        const API_URL = "https://script.google.com/macros/s/AKfycbxjPywvCdRXLNVxbikJYgHNs_6e1c_yroYwbHyP5Jucc-22DdBnEdJDsLXCqDW3zFuv/exec";
+
+        function previsualizarFoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('fotoPlaceholder').classList.add('hidden');
+                const img = document.getElementById('fotoPreview');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // Compresión rápida nativa (Canvas)
+        async function comprimirImagen(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 600;
+                        
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function mostrarModalEdo(icono, titulo, mensaje, mostrarBoton, animar) {
+            const overlay = document.getElementById('overlayEstado');
+            const iconEl = document.getElementById('estadoIcono');
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            iconEl.innerText = icono;
+            if(animar) iconEl.classList.add('animate-spin');
+            else iconEl.classList.remove('animate-spin');
+            
+            document.getElementById('estadoTitulo').innerText = titulo;
+            document.getElementById('estadoMensaje').innerText = mensaje;
+            
+            const btn = document.getElementById('btnCerrarModal');
+            if(mostrarBoton) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('overlayEstado').classList.add('hidden');
+            document.getElementById('overlayEstado').classList.remove('flex');
+        }
+
+        document.getElementById('formularioEvidencia').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const idClase = document.getElementById('idClase').value.trim();
+            const motivo = document.getElementById('motivo').value.trim();
+            const inputFoto = document.getElementById('inputFoto');
+            
+            if (!inputFoto.files[0]) return alert("Falta la foto");
+
+            mostrarModalEdo("⏳", "Procesando", "Comprimiendo imagen en tu celular...", false, true);
+
+            try {
+                // 1. Comprimir
+                const base64Foto = await comprimirImagen(inputFoto.files[0]);
+                const base64Puro = base64Foto.split(',')[1];
+
+                mostrarModalEdo("📡", "Subiendo a la nube", "Enviando datos al servidor seguro...", false, true);
+
+                // 2. Armar el paquete de datos
+                const payload = {
+                    accion: "subir_evidencia",
+                    idClase: idClase,
+                    motivo: motivo,
+                    fotoBase64: base64Puro
+                };
+
+                // 3. Enviar a Google Apps Script por POST
+                const respuesta = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, // text/plain evita errores de CORS en GAS
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await respuesta.json();
+
+                if (data.success) {
+                    mostrarModalEdo("✅", "¡Éxito!", "Evidencia guardada en Drive y clase actualizada.", true, false);
+                    document.getElementById('formularioEvidencia').reset();
+                    document.getElementById('fotoPreview').classList.add('hidden');
+                    document.getElementById('fotoPlaceholder').classList.remove('hidden');
+                } else {
+                    mostrarModalEdo("❌", "Error", data.error || "No se pudo guardar la evidencia. Revisa el ID de la clase.", true, false);
+                }
+
+            } catch (error) {
+                mostrarModalEdo("⚠️", "Error de Conexión", "Revisa tu internet o la URL del API.", true, false);
+            }
+        });
+    </script>
 </body>
 </html>
